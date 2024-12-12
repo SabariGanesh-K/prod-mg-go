@@ -1,0 +1,2 @@
+DROP TABLE  products CASCADE;
+DROP TABLE   users CASCADE;
