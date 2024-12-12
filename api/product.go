@@ -1,9 +1,13 @@
 package api
 
 import (
+	"encoding/json"
 	"fmt"
 	"mime/multipart"
 	"net/http"
+
+	"github.com/streadway/amqp"
+	"github.com/rs/zerolog/log"
 
 	db "github.com/SabariGanesh-K/prod-mgm-go/db/sqlc"
 	"github.com/SabariGanesh-K/prod-mgm-go/s3aws"
@@ -61,6 +65,7 @@ func (server *Server) createProduct(ctx *gin.Context){
 	fmt.Printf("file added in location %s",location)
 
 	//get urls
+	//add rabbitmq queue
 	// ProductUrls:=[]string{"https://firebasestorage.googleapis.com/v0/b/personal-website-cc143.appspot.com/o/B612_20241011_182211_278.jpg?alt=media&token=7f8c8632-881a-4585-8996-e93927758907"}
 	arg:= db.CreateProductParams{
 		ID               :req.ID,
@@ -84,6 +89,32 @@ func (server *Server) createProduct(ctx *gin.Context){
 	}
 
 	//signal rabbitmq
+	
+	payload := map[string]string{
+        "url":  location,
+        "product_id":req.ID, // Convert productID to string
+    }
+    jsonPayload, err := json.Marshal(payload)
+    if err != nil {
+		log.Fatal().Err(err).Msg("RabbitMQ marshal error")
+
+        // Handle error (e.g., retry, dead-letter queue)
+    }
+
+	err = server.rmqch.Publish(
+		"",     // exchange
+		server.q.Name, // routing key
+		false,  // mandatory
+		false,  // immediate
+		amqp.Publishing{
+			ContentType: "application/json",
+			Body:        jsonPayload,
+		})
+	if err != nil {
+		log.Fatal().Err(err).Msg("RabbitMQ Publish failed. ")
+
+		// Implement retry mechanism or error handling here
+	}
 
 	ctx.JSON(http.StatusOK,product)
 

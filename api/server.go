@@ -3,7 +3,7 @@ package api
 import (
 	db "github.com/SabariGanesh-K/prod-mgm-go/db/sqlc"
 	"github.com/SabariGanesh-K/prod-mgm-go/util"
-
+  "github.com/streadway/amqp"
 	"github.com/gin-gonic/gin"
 )
 
@@ -11,12 +11,16 @@ type Server struct {
 	config util.Config
 	store db.Store
 	router *gin.Engine
+	rmqch *amqp.Channel
+	q amqp.Queue
 }
 
-func NewServer(config util.Config, store db.Store) (*Server ,error){
+func NewServer(config util.Config, store db.Store,rmqch *amqp.Channel, q amqp.Queue) (*Server ,error){
 	server := &Server{
 config: config,
 store: store,
+rmqch: rmqch,
+q: q,
 	}
 	server.setupRouter()
 	return server,nil

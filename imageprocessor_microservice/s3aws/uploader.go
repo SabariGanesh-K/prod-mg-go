@@ -20,7 +20,6 @@ func UploadFile(uploader *s3manager.Uploader,  file io.Reader, bucketName string
         Bucket: aws.String(bucketName),
         Key:    aws.String(fileName),
         Body:   file,
-		ACL: aws.String("public-read"),
 		ContentType: aws.String("image/jpeg"),
     })
 

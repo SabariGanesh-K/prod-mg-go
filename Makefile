@@ -32,7 +32,8 @@ migrateup:
 migratedown:
 	migrate -path db/migrations -database "$(DB_URL)" -verbose down
 
-
+rabbitmq:
+	docker-compose up -d
 
 redis:
 	docker run --name redis -p 6379:6379 -d redis:7-alpine
@@ -42,4 +43,4 @@ test:
 launch:
 	docker start postgres
 	docker start redis
-.PHONY: postgres new_migration createdb dropdb migrateup migratedown createmigrateinitschema sqlc mock test  redis testmail launch test
+.PHONY: postgres new_migration createdb dropdb migrateup migratedown createmigrateinitschema sqlc mock test  redis testmail launch test rabbitmq
