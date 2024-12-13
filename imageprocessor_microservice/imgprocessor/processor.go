@@ -17,9 +17,10 @@ import (
 )
 
 func ProcessImage(message []byte) {
+    config, err := util.LoadConfig(".")
     // 1. Parse the JSON payload
     var data map[string]string
-    err := json.Unmarshal(message, &data)
+    err = json.Unmarshal(message, &data)
     if err != nil {
         log.Fatal().Err(err).Msg("Failed to parse JSON message" )
         return
@@ -69,7 +70,7 @@ func ProcessImage(message []byte) {
 		return
 	}
 
-	bucketName := "elasticbeanstalk-us-east-1-686995207617"
+	bucketName := config.AwsBucketName
 	uploader := s3manager.NewUploader(sess)
     log.Info().Msg("Compressed image. Uploading to S3...." )
     // 6. Upload to S3

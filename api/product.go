@@ -52,7 +52,7 @@ func (server *Server) createProduct(ctx *gin.Context) {
 		return
 	}
 
-	bucketName := "elasticbeanstalk-us-east-1-686995207617"
+	bucketName := server.config.AwsBucketName
 	uploader := s3manager.NewUploader(sess)
 	file, err := req.File.Open()
 

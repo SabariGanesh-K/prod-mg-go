@@ -21,7 +21,7 @@ RabbitMQUrl string `mapstructure:"RABBITMQ_URL"`
 	// AwsAccessKeyID string `mapstructure:"AWS_ACCESS_KEY_ID"`
 	// AwsSecretKey   string `mapstructure:"AWS_SECRET_ACCESS_KEY"`
 	// AwsRegion      string `mapstructure:"AWS_REGION"`
-	// AwsBucketName  string `mapstructure:"AWS_BUCKET_NAME"`
+	AwsBucketName  string `mapstructure:"AWS_BUCKET_NAME"`
 	// EmailSenderName      string        `mapstructure:"EMAIL_SENDER_NAME"`
 	// EmailSenderAddress   string        `mapstructure:"EMAIL_SENDER_ADDRESS"`
 	// EmailSenderPassword  string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
