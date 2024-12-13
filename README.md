@@ -51,6 +51,24 @@ make rabbitmq
 
 ````
 
+Open a Public S3 Bucket  from AWS
+
+
+Setup environment  [appp.env]
+```bash
+ENVIRONMENT=development
+DB_SOURCE=postgresql://root:secret@localhost:5432/prod-mgm?sslmode=disable
+DB_DRIVER=postgres
+MIGRATION_URL=file://db/migration
+HTTP_SERVER_ADDRESS=0.0.0.0:8083
+AWS_ACCESS_KEY_ID= <access key >
+AWS_SECRET_ACCESS_KEY= <secret access >
+AWS_REGION=us-east-1
+AWS_BUCKET_NAME= <bucket name >
+REDIS_ADDRESS=0.0.0.0:6379
+RABBITMQ_URL="amqp://guest:guest@localhost:5672/"
+````
+
 ## DB and Migrations
 Ensure Postgresql container is running
 
