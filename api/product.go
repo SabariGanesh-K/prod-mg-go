@@ -256,5 +256,17 @@ func (server *Server) addCompressedImagesByProductID(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+	productmarshalled, err := json.Marshal(product)
+
+	client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "",
+		DB:       0,
+	})
+	err = client.Set(product.ID, productmarshalled, 0).Err()
+	if err != nil {
+		fmt.Print("error saving in redis")
+	}
+	fmt.Println("done caching in redis")
 	ctx.JSON(http.StatusOK, product)
 }
