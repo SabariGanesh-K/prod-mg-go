@@ -96,7 +96,7 @@ func (mr *MockStoreMockRecorder) GetProductByProductID(arg0, arg1 interface{}) *
 }
 
 // GetProductsByUserID mocks base method.
-func (m *MockStore) GetProductsByUserID(arg0 context.Context, arg1 string) ([]db.Products, error) {
+func (m *MockStore) GetProductsByUserID(arg0 context.Context, arg1 db.GetProductsByUserIDParams) ([]db.Products, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "GetProductsByUserID", arg0, arg1)
 	ret0, _ := ret[0].([]db.Products)

@@ -87,7 +87,7 @@ func ProcessImage(message []byte) {
     log.Info().Msg("Uploaded to S3. Updating Database..." )
 
     // 7. Update the database (call the API endpoint)
-    apiURL := fmt.Sprintf("http://0.0.0.0:8082/products/addcompressed")
+    apiURL := fmt.Sprintf("http://0.0.0.0:8083/products/addcompressed")
     requestBody, err := json.Marshal(map[string]interface{}{
         "compressed_product_images_urls": []string{compressedImageURL},
         "id":                              productID,

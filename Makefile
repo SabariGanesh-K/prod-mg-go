@@ -20,9 +20,11 @@ server:
 
 mock:
 	mockgen -package mockdb -destination db/mock/store.go github.com/SabariGanesh-K/prod-mgm-go/db/sqlc Store
+mockrmq:
+	mockgen -package mockdb -destination rabbitmqmock/mock/rmq.go github.com/SabariGanesh-K/prod-mgm-go/rabbitmqmock MockChannel,MockQueue
 
 testfull:
-	go test -v -cover ./db/sqlc ./api ./token  
+	go test -v -cover ./db/sqlc ./api 
 testmail:
 	go test -v -cover ./email
 

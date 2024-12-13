@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 
 	"github.com/lib/pq"
 )
@@ -110,10 +111,25 @@ func (q *Queries) GetProductByProductID(ctx context.Context, id string) (Product
 const getProductsByUserID = `-- name: GetProductsByUserID :many
 SELECT id, user_id, product_name, product_description, product_price, product_urls, compressed_product_images_urls, created_at FROM products
 WHERE user_id = $1
+  AND product_price >= COALESCE($2, product_price)
+  AND product_price <= COALESCE($3, product_price)
+  AND product_name ILIKE '%' || COALESCE($4, product_name) || '%'
 `
 
-func (q *Queries) GetProductsByUserID(ctx context.Context, userID string) ([]Products, error) {
-	rows, err := q.db.QueryContext(ctx, getProductsByUserID, userID)
+type GetProductsByUserIDParams struct {
+	UserID      string         `json:"user_id"`
+	MinPrice    sql.NullString `json:"min_price"`
+	MaxPrice    sql.NullString `json:"max_price"`
+	ProductName sql.NullString `json:"product_name"`
+}
+
+func (q *Queries) GetProductsByUserID(ctx context.Context, arg GetProductsByUserIDParams) ([]Products, error) {
+	rows, err := q.db.QueryContext(ctx, getProductsByUserID,
+		arg.UserID,
+		arg.MinPrice,
+		arg.MaxPrice,
+		arg.ProductName,
+	)
 	if err != nil {
 		return nil, err
 	}

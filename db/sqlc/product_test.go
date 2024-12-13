@@ -2,6 +2,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 	"testing"
 
 	"github.com/SabariGanesh-K/prod-mgm-go/util"
@@ -37,11 +38,11 @@ func TestCreateProduct(t *testing.T)  {
 }
 
 
-func TestGetProduct(t *testing.T)  {
+func TestGetProductByProductID(t *testing.T)  {
 	
 
 	product1:= createRandomProduct(t)
-	product2,err:= testQueries.GetProductByProductID(context.Background(),product1.UserID)
+	product2,err:= testQueries.GetProductByProductID(context.Background(),product1.ID)
 	require.NoError(t,err)
 	require.NotEmpty(t,product2)
 	require.Equal(t,product1.UserID,product2.UserID)
@@ -50,6 +51,34 @@ func TestGetProduct(t *testing.T)  {
 	require.Equal(t,product1.ProductDescription,product2.ProductDescription)
 	require.Equal(t,product1.ProductPrice,product2.ProductPrice)
 	require.NotEmpty(t,product2.ProductUrls)
+
+
+}
+
+func TestGetProductsByUserID(t *testing.T)  {
+	var lastProduct Products
+	for i := 0; i < 10; i++ {
+		lastProduct = createRandomProduct(t)
+	}
+
+	arg:= GetProductsByUserIDParams{
+		UserID: lastProduct.UserID,
+		MinPrice: sql.NullString{"0",true,},
+		MaxPrice: sql.NullString{"100",true,},
+		ProductName: sql.NullString{"",true,},
+	}
+	product2,err:= testQueries.GetProductsByUserID(context.Background(),arg)
+
+	// accounts, err := testStore.ListAccounts(context.Background(), arg)
+	require.NoError(t, err)
+	require.NotEmpty(t, product2)
+
+	for _, product := range product2 {
+		require.NotEmpty(t, product)
+		require.Equal(t, lastProduct.UserID , product.UserID)
+	}
+
+
 
 
 }

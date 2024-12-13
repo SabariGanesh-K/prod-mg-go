@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"mime/multipart"
@@ -102,11 +103,35 @@ func (server *Server) createProduct(ctx *gin.Context) {
 		// Handle error (e.g., retry, dead-letter queue)
 	}
 
-	err = server.rmqch.Publish(
-		"",            // exchange
-		server.q.Name, // routing key
-		false,         // mandatory
-		false,         // immediate
+	rabbitMQConn, err := amqp.Dial(server.config.RabbitMQUrl)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Unable to connect to RabbitMQ")
+
+	}
+	defer rabbitMQConn.Close()
+	ch, err := rabbitMQConn.Channel()
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to open a RabbitMQ  channel)")
+
+	}
+	defer ch.Close()
+	q, err := ch.QueueDeclare(
+		"product_images", // name
+		false,            // durable
+		false,            // delete when unused
+		false,            // exclusive
+		false,            // no-wait
+		nil,              // arguments
+	)
+	if err != nil {
+		log.Fatal().Err(err).Msg("Failed to declare a RabbitMQ queue")
+
+	}
+	err = ch.Publish(
+		"",     // exchange
+		q.Name, // routing key
+		false,  // mandatory
+		false,  // immediate
 		amqp.Publishing{
 			ContentType: "application/json",
 			Body:        jsonPayload,
@@ -116,7 +141,7 @@ func (server *Server) createProduct(ctx *gin.Context) {
 
 		// Implement retry mechanism or error handling here
 	}
-	
+
 	ctx.JSON(http.StatusOK, product)
 
 }
@@ -125,6 +150,41 @@ type getProductByProductIDRequest struct {
 	ID string `uri:"id"`
 }
 
+
+type getProductsByUserIDRequest struct {
+	UserID      string         `json:"user_id"`
+	MinPrice    sql.NullString `json:"min_price"`
+	MaxPrice    sql.NullString `json:"max_price"`
+	ProductName sql.NullString `json:"product_name"`
+}
+
+func (server *Server ) getProductsByUserID(ctx *gin.Context) {
+	var req getProductsByUserIDRequest
+	if err := ctx.ShouldBindUri(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+	arg:= db.GetProductsByUserIDParams{
+		UserID: req.UserID,
+		MinPrice: req.MinPrice,
+		MaxPrice: req.MaxPrice,
+		ProductName: req.ProductName,
+	}
+	
+	products, err := server.store.GetProductsByUserID(ctx, arg)
+	if err != nil {
+		if db.ErrorCode(err) == db.UniqueViolation {
+			ctx.JSON(http.StatusForbidden, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+		ctx.JSON(http.StatusOK, products)
+
+
+}
 func (server *Server) getProductByProductID(ctx *gin.Context) {
 	var req getProductByProductIDRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
@@ -141,7 +201,7 @@ func (server *Server) getProductByProductID(ctx *gin.Context) {
 
 	var redisdata db.Products
 	err2 := json.Unmarshal([]byte(val), &redisdata)
-	if err1!=nil || err2!=nil {
+	if err1 != nil || err2 != nil {
 		fmt.Println(err1, err2)
 		product, err := server.store.GetProductByProductID(ctx, req.ID)
 		if err != nil {
@@ -153,20 +213,20 @@ func (server *Server) getProductByProductID(ctx *gin.Context) {
 			return
 		}
 		productmarshalled, err := json.Marshal(product)
-    if err != nil {
-        fmt.Println(err)
-    }
+		if err != nil {
+			fmt.Println(err)
+		}
 
-	client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "",
-		DB:       0,
-	})
-	err = client.Set(product.ID, productmarshalled, 0).Err()
-	if err!=nil {
-		fmt.Print("error saving in redis")
-	}
-	fmt.Println("done caching in redis")
+		client := redis.NewClient(&redis.Options{
+			Addr:     "localhost:6379",
+			Password: "",
+			DB:       0,
+		})
+		err = client.Set(product.ID, productmarshalled, 0).Err()
+		if err != nil {
+			fmt.Print("error saving in redis")
+		}
+		fmt.Println("done caching in redis")
 		ctx.JSON(http.StatusOK, product)
 
 	} else {

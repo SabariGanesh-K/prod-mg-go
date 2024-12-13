@@ -74,14 +74,7 @@ func main() {
 		log.Fatal().Err(err).Msg("Failed to declare a RabbitMQ queue")
 
     }
-
-    // 
-
 	store := db.NewStore(conn)
-
-	
-
-	// taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
 
 	waitGroup, ctx := errgroup.WithContext(ctx)
 
@@ -95,52 +88,11 @@ func main() {
 	}
 }
 
-// func runDBMigration(migrationURL string, dbSource string) {
-// 	migration, err := migrate.New(migrationURL, dbSource)
-// 	if err != nil {
-// 		log.Fatal().Err(err).Msg("cannot create new migrate instance")
-// 	}
-
-// 	if err = migration.Up(); err != nil && err != migrate.ErrNoChange {
-// 		log.Fatal().Err(err).Msg("failed to run migrate up")
-// 	}
-
-// 	log.Info().Msg("db migrated successfully")
-// }
-
-// func runTaskProcessor(
-// 	ctx context.Context,
-// 	waitGroup *errgroup.Group,
-// 	config util.Config,
-// 	redisOpt asynq.RedisClientOpt,
-// 	store db.Store,
-// ) {
-// 	mailer := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAddress, config.EmailSenderPassword)
-// 	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mailer)
-
-// 	log.Info().Msg("start task processor")
-// 	err := taskProcessor.Start()
-// 	if err != nil {
-// 		log.Fatal().Err(err).Msg("failed to start task processor")
-// 	}
-
-// 	waitGroup.Go(func() error {
-// 		<-ctx.Done()
-// 		log.Info().Msg("graceful shutdown task processor")
-
-// 		taskProcessor.Shutdown()
-// 		log.Info().Msg("task processor is stopped")
-
-// 		return nil
-// 	})
-// }
-
-
 
 
 
 func runGinServer(config util.Config, store db.Store ,rmqch *amqp.Channel,q amqp.Queue) {
-	server, err := api.NewServer(config, store,rmqch,q)
+	server, err := api.NewServer(config, store)
 	if err != nil {
 		log.Fatal().Err(err).Msg("cannot create server")
 	}
